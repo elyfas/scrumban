@@ -35,113 +35,78 @@ type ActiveSection =
   | "kanban-gestao-permissoes";
 
 export default function App() {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] =
-    useState(false);
-  const [activeSection, setActiveSection] =
-    useState<ActiveSection>("kanban-quadro");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [activeSection, setActiveSection] = useState<ActiveSection>("kanban-quadro");
+
+  // Componente para seções em desenvolvimento
+  const DevelopmentSection = () => (
+    <div className="p-8">
+      <h1>Em Desenvolvimento</h1>
+      <p className="text-muted-foreground">
+        Esta seção está em desenvolvimento...
+      </p>
+    </div>
+  );
+
+  // Componente para overview de relatórios
+  const ReportsOverview = () => (
+    <div className="p-8">
+      <h1>Relatórios</h1>
+      <p className="text-muted-foreground mb-6">
+        Selecione um tipo de relatório no menu lateral para começar.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          className="p-6 border border-border rounded-lg hover:shadow-md transition-shadow"
+          onClick={() => setActiveSection("kanban-relatorios-operacional")}
+        >
+          <h3>Relatórios Operacionais</h3>
+          <p className="text-muted-foreground">
+            Métricas de performance, velocity, burndown e análises de sprint.
+          </p>
+        </div>
+        <div
+          className="p-6 border border-border rounded-lg hover:shadow-md transition-shadow"
+          onClick={() => setActiveSection("kanban-relatorios-financeiro")}
+        >
+          <h3>Relatórios Financeiros</h3>
+          <p className="text-muted-foreground">
+            Custos de projeto, ROI, análise de recursos e orçamentos.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderMainContent = () => {
-    switch (activeSection) {
-      case "kanban-quadro":
-        return <KanbanBoard />;
-      case "kanban-sprint":
-        return <SprintManagement />;
-      case "kanban-backlog":
-        return <BacklogView />;
-      case "kanban-cronograma":
-        return <GanttChart />;
-      case "kanban-relatorios":
-        return (
-          <div className="p-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Relatórios
-            </h1>
-            <p className="text-gray-600">
-              Selecione um tipo de relatório no menu lateral
-              para começar.
-            </p>
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div
-                className="p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() =>
-                  setActiveSection(
-                    "kanban-relatorios-operacional",
-                  )
-                }
-              >
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Relatórios Operacionais
-                </h3>
-                <p className="text-gray-600">
-                  Métricas de performance, velocity, burndown e
-                  análises de sprint.
-                </p>
-              </div>
-              <div
-                className="p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() =>
-                  setActiveSection(
-                    "kanban-relatorios-financeiro",
-                  )
-                }
-              >
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Relatórios Financeiros
-                </h3>
-                <p className="text-gray-600">
-                  Custos de projeto, ROI, análise de recursos e
-                  orçamentos.
-                </p>
-              </div>
-            </div>
-          </div>
-        );
-      case "kanban-relatorios-operacional":
-        return <OperationalReports />;
-      case "kanban-relatorios-financeiro":
-        return <FinancialReports />;
-      case "kanban-documentacao":
-        return <DocumentationPage />;
-      case "kanban-gestao":
-        return (
-          <ManagementHub onSectionChange={setActiveSection} />
-        );
-      case "kanban-gestao-quadros":
-        return <BoardManagement />;
-      case "kanban-gestao-membros":
-        return <MemberManagement />;
-      case "kanban-gestao-permissoes":
-        return <PermissionsManagement />;
-      default:
-        return (
-          <div className="p-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Em Desenvolvimento
-            </h1>
-            <p className="text-gray-600">
-              Esta seção está em desenvolvimento...
-            </p>
-          </div>
-        );
-    }
+    const sectionComponents = {
+      "kanban-quadro": KanbanBoard,
+      "kanban-sprint": SprintManagement,
+      "kanban-backlog": BacklogView,
+      "kanban-cronograma": GanttChart,
+      "kanban-relatorios": ReportsOverview,
+      "kanban-relatorios-operacional": OperationalReports,
+      "kanban-relatorios-financeiro": FinancialReports,
+      "kanban-documentacao": DocumentationPage,
+      "kanban-gestao": () => <ManagementHub onSectionChange={setActiveSection} />,
+      "kanban-gestao-quadros": BoardManagement,
+      "kanban-gestao-membros": MemberManagement,
+      "kanban-gestao-permissoes": PermissionsManagement,
+    };
+
+    const Component = sectionComponents[activeSection] || DevelopmentSection;
+    return <Component />;
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
       <SpassuSidebar
         isCollapsed={isSidebarCollapsed}
-        onToggle={() =>
-          setIsSidebarCollapsed(!isSidebarCollapsed)
-        }
+        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         activeSection={activeSection}
         onSectionChange={setActiveSection}
       />
-
-      {/* Main Content */}
       <div className="flex-1">{renderMainContent()}</div>
-
-      {/* Toast Notifications */}
       <Toaster />
     </div>
   );

@@ -128,7 +128,7 @@
     @apply bg-background text-foreground;
   }
 
-  /* Cursor pointer para elementos clicáveis */
+  /* Cursor styles consolidados */
   button,
   [role="button"],
   [type="button"],
@@ -140,11 +140,7 @@
   [data-clickable="true"],
   [onClick],
   summary,
-  [tabindex]:not([tabindex="-1"]):not(input):not(textarea):not(select) {
-    cursor: pointer;
-  }
-
-  /* Elementos específicos que devem ter cursor pointer */
+  [tabindex]:not([tabindex="-1"]):not(input):not(textarea):not(select),
   select,
   input[type="checkbox"],
   input[type="radio"],
@@ -152,26 +148,15 @@
     cursor: pointer;
   }
 
-  /* Elementos com estado disabled devem ter cursor padrão */
-  button:disabled,
-  [role="button"]:disabled,
-  [type="button"]:disabled,
-  [type="submit"]:disabled,
-  [type="reset"]:disabled,
+  /* Elementos com estado disabled */
+  :is(button, [role="button"], [type="button"], [type="submit"], [type="reset"]):disabled,
   .disabled,
   [disabled] {
     cursor: not-allowed;
   }
 
-  /* Elementos com cursor específico */
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="number"],
-  input[type="search"],
-  input[type="tel"],
-  input[type="url"],
-  textarea {
+  /* Elementos de texto */
+  :is(input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="search"], input[type="tel"], input[type="url"], textarea) {
     cursor: text;
   }
 }
