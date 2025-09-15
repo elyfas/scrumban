@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Plus, Settings, LayoutGrid, List } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from '../utils/toast';
 import { initialColumns, mockCards, availableSprints, currentUser } from '../constants/kanban';
 import { 
   getUniqueAssignees, 
@@ -185,10 +185,7 @@ export function KanbanBoard() {
           const validationResult = canMoveCard(originalCard, originalStatus, targetStatus, currentUser);
           
           if (!validationResult.canMove) {
-            toast.error('Movimentação não permitida', {
-              description: validationResult.reason,
-              duration: 5000
-            });
+            toast.error(`Movimentação não permitida: ${validationResult.reason}`);
             return column; // Retorna a coluna sem modificações
           }
 
@@ -298,7 +295,7 @@ export function KanbanBoard() {
                 <div className="text-sm">
                   <p className="font-medium text-amber-800">Regras para Desenvolvedores</p>
                   <p className="text-amber-700 mt-1">
-                    Você pode mover apenas <strong>histórias de usuário</strong> seguindo este fluxo: 
+                    Você pode mover apenas <strong>História de Usuário, Bug e Task</strong> seguindo este fluxo: 
                     Planejado → Em Execução → Em Espera → Em Execução → Em Teste → Aguardando Validação Técnica
                   </p>
                 </div>

@@ -12,7 +12,7 @@ import { Progress } from './ui/progress';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from '../utils/toast';
 import { Sprint, KanbanCard, Priority, IssueType, SprintFilterOptions } from '../types/kanban';
 import { mockCards } from '../constants/kanban';
 import { SprintFilters } from './SprintFilters';
@@ -376,10 +376,221 @@ export function SprintView() {
           <p className="text-gray-600 mt-1">Gerencie suas sprints e backlog</p>
         </div>
         
-        <Button className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Nova Sprint
-        </Button>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Nova Sprint
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>{editingSprint ? 'Editar Sprint' : 'Nova Sprint'}</DialogTitle>
+              <DialogDescription>
+                {editingSprint ? 'Edite as informações da sprint.' : 'Crie uma nova sprint para organizar suas tarefas.'}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-4 py-4">
+              {/* Sprint Name */}
+              <div className="grid gap-2">
+                <Label htmlFor="name">Nome da Sprint *</Label>
+                <Input
+                  id="name"
+                  placeholder="Ex: Sprint 1 - Funcionalidades Básicas"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+              </div>
+
+              {/* Sprint Goal */}
+              <div className="grid gap-2">
+                <Label htmlFor="goal">Objetivo da Sprint *</Label>
+                <Textarea
+                  id="goal"
+                  placeholder="Descreva o objetivo principal desta sprint..."
+                  value={formData.goal}
+                  onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              {/* Date Range */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="startDate">Data de Início *</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="endDate">Data de Fim *</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Sprint Duration Helper */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="weeks">Duração (semanas)</Label>
+                  <Select 
+                    value={formData.weeks.toString()} 
+                    onValueChange={(value) => {
+                      const weeks = parseInt(value);
+                      setFormData({ 
+                        ...formData, 
+                        weeks,
+                        storyPointsPerDeveloper: calculateStoryPointsByWeeks(weeks, formData.holidays, formData.absentMembers)
+                      });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 semana</SelectItem>
+                      <SelectItem value="2">2 semanas</SelectItem>
+                      <SelectItem value="3">3 semanas</SelectItem>
+                      <SelectItem value="4">4 semanas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="holidays">Feriados</Label>
+                  <Input
+                    id="holidays"
+                    type="number"
+                    min="0"
+                    max="10"
+                    value={formData.holidays}
+                    onChange={(e) => {
+                      const holidays = parseInt(e.target.value) || 0;
+                      setFormData({ 
+                        ...formData, 
+                        holidays,
+                        storyPointsPerDeveloper: calculateStoryPointsByWeeks(formData.weeks, holidays, formData.absentMembers)
+                      });
+                    }}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="pointsPerDev">Pontos por Dev</Label>
+                  <Input
+                    id="pointsPerDev"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={formData.storyPointsPerDeveloper}
+                    onChange={(e) => setFormData({ ...formData, storyPointsPerDeveloper: parseInt(e.target.value) || 8 })}
+                  />
+                </div>
+              </div>
+
+              {/* Team Members */}
+              <div className="grid gap-2">
+                <Label>Membros da Equipe</Label>
+                <div className="flex flex-wrap gap-2">
+                  {['João Silva', 'Maria Santos', 'Pedro Costa', 'Ana Oliveira', 'Carlos Lima', 'Lucia Mendes'].map(member => (
+                    <label key={member} className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.teamMembers.includes(member)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({
+                              ...formData,
+                              teamMembers: [...formData.teamMembers, member]
+                            });
+                          } else {
+                            setFormData({
+                              ...formData,
+                              teamMembers: formData.teamMembers.filter(m => m !== member),
+                              absentMembers: formData.absentMembers.filter(am => am.name !== member)
+                            });
+                          }
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      <span className="text-sm">{member}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Capacity Summary */}
+              {formData.teamMembers.length > 0 && (
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm text-blue-800">
+                    <Users className="w-4 h-4" />
+                    <span>
+                      Capacidade: {calculateSprintCapacity(formData.teamMembers, formData.storyPointsPerDeveloper, formData.absentMembers)} pontos 
+                      ({formData.teamMembers.length} desenvolvedores × {formData.storyPointsPerDeveloper} pontos)
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsCreateDialogOpen(false);
+                  setEditingSprint(null);
+                  resetForm();
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (formData.name && formData.goal && formData.startDate && formData.endDate) {
+                    const newSprint: Sprint = {
+                      id: editingSprint?.id || Date.now().toString(),
+                      name: formData.name,
+                      goal: formData.goal,
+                      startDate: new Date(formData.startDate),
+                      endDate: new Date(formData.endDate),
+                      status: formData.status,
+                      cards: editingSprint?.cards || [],
+                      teamMembers: formData.teamMembers,
+                      absentMembers: formData.absentMembers,
+                      storyPointsPerDeveloper: formData.storyPointsPerDeveloper,
+                      capacity: calculateSprintCapacity(formData.teamMembers, formData.storyPointsPerDeveloper, formData.absentMembers),
+                      createdAt: editingSprint?.createdAt || new Date(),
+                      updatedAt: new Date()
+                    };
+
+                    if (editingSprint) {
+                      setSprints(sprints.map(s => s.id === editingSprint.id ? newSprint : s));
+                      toast.success('Sprint atualizada com sucesso!');
+                    } else {
+                      setSprints([...sprints, newSprint]);
+                      toast.success('Sprint criada com sucesso!');
+                    }
+
+                    setIsCreateDialogOpen(false);
+                    setEditingSprint(null);
+                    resetForm();
+                  } else {
+                    toast.error('Preencha todos os campos obrigatórios.');
+                  }
+                }}
+                disabled={!formData.name || !formData.goal || !formData.startDate || !formData.endDate}
+              >
+                {editingSprint ? 'Salvar Alterações' : 'Criar Sprint'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters */}
@@ -423,6 +634,90 @@ export function SprintView() {
                   </div>
                   <div className="flex items-center gap-2">
                     {getSprintActions(sprint)}
+                    
+                    {/* More Actions Dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setEditingSprint(sprint);
+                            setFormData({
+                              name: sprint.name,
+                              goal: sprint.goal,
+                              startDate: sprint.startDate.toISOString().split('T')[0],
+                              endDate: sprint.endDate.toISOString().split('T')[0],
+                              status: sprint.status,
+                              teamMembers: sprint.teamMembers,
+                              absentMembers: sprint.absentMembers,
+                              weeks: Math.ceil((sprint.endDate.getTime() - sprint.startDate.getTime()) / (1000 * 60 * 60 * 24 * 7)),
+                              holidays: 0,
+                              storyPointsPerDeveloper: sprint.storyPointsPerDeveloper
+                            });
+                            setIsCreateDialogOpen(true);
+                          }}
+                          disabled={sprint.status === 'completed' || sprint.status === 'cancelled'}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar Sprint
+                        </DropdownMenuItem>
+                        
+                        {sprint.status === 'planning' && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              const confirmMessage = `Deseja excluir a sprint "${sprint.name}"?\n\nEsta ação não pode ser desfeita.`;
+                              if (confirm(confirmMessage)) {
+                                // Remove cards from sprint first
+                                const updatedCards = allCards.map(card =>
+                                  card.sprint === sprint.id ? { ...card, sprint: undefined } : card
+                                );
+                                setAllCards(updatedCards);
+                                
+                                // Remove sprint
+                                setSprints(sprints.filter(s => s.id !== sprint.id));
+                                toast.success(`Sprint "${sprint.name}" excluída com sucesso!`);
+                              }
+                            }}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Excluir Sprint
+                          </DropdownMenuItem>
+                        )}
+                        
+                        {sprint.status === 'active' && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              const confirmMessage = `Deseja cancelar a sprint "${sprint.name}"?\n\nEsta ação mudará o status para "Cancelada" e os cards serão movidos de volta para o backlog.`;
+                              if (confirm(confirmMessage)) {
+                                // Move cards back to backlog
+                                const updatedCards = allCards.map(card =>
+                                  card.sprint === sprint.id ? { ...card, sprint: undefined } : card
+                                );
+                                setAllCards(updatedCards);
+                                
+                                // Update sprint status
+                                const updatedSprints = sprints.map(s =>
+                                  s.id === sprint.id 
+                                    ? { ...s, status: 'cancelled' as const, cards: [], updatedAt: new Date() }
+                                    : s
+                                );
+                                setSprints(updatedSprints);
+                                toast.success(`Sprint "${sprint.name}" cancelada. Cards movidos para o backlog.`);
+                              }
+                            }}
+                            className="text-red-600"
+                          >
+                            <Ban className="mr-2 h-4 w-4" />
+                            Cancelar Sprint
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
                 <p className="text-gray-600 text-sm">{sprint.goal}</p>

@@ -127,6 +127,53 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Cursor pointer para elementos clicáveis */
+  button,
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  a,
+  label[for],
+  .cursor-pointer,
+  [data-clickable="true"],
+  [onClick],
+  summary,
+  [tabindex]:not([tabindex="-1"]):not(input):not(textarea):not(select) {
+    cursor: pointer;
+  }
+
+  /* Elementos específicos que devem ter cursor pointer */
+  select,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="file"] {
+    cursor: pointer;
+  }
+
+  /* Elementos com estado disabled devem ter cursor padrão */
+  button:disabled,
+  [role="button"]:disabled,
+  [type="button"]:disabled,
+  [type="submit"]:disabled,
+  [type="reset"]:disabled,
+  .disabled,
+  [disabled] {
+    cursor: not-allowed;
+  }
+
+  /* Elementos com cursor específico */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea {
+    cursor: text;
+  }
 }
 
 /**

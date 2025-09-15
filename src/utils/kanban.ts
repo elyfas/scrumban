@@ -116,11 +116,11 @@ export const canMoveCard = (
     return { canMove: true };
   }
 
-  // Se não é uma história de usuário, desenvolvedores não podem mover
-  if (card.issueType !== 'story') {
+  // Se não é uma história de usuário, bug ou task, desenvolvedores não podem mover
+  if (!['story', 'bug', 'task'].includes(card.issueType)) {
     return { 
       canMove: false, 
-      reason: 'Desenvolvedores podem mover apenas histórias de usuário (User Stories).' 
+      reason: 'Desenvolvedores podem mover apenas História de Usuário, Bug e Task.' 
     };
   }
 
@@ -137,7 +137,7 @@ export const canMoveCard = (
   if (!allowedTargets || !allowedTargets.includes(toStatus)) {
     return {
       canMove: false,
-      reason: `Desenvolvedores não podem mover histórias de ${getStatusDisplayName(fromStatus)} para ${getStatusDisplayName(toStatus)}. Fluxo permitido: Planejado → Em Execução → Em Espera → Em Execução → Em Teste → Aguardando Validação Técnica.`
+      reason: `Desenvolvedores não podem mover este item de ${getStatusDisplayName(fromStatus)} para ${getStatusDisplayName(toStatus)}. Fluxo permitido: Planejado → Em Execução → Em Espera → Em Execução → Em Teste → Aguardando Validação Técnica.`
     };
   }
 
