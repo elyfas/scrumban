@@ -1,7 +1,7 @@
 
   # Kanban Board Setup
 
-  This is a code bundle for Kanban Board Setup. The original project is available at https://www.figma.com/design/LFewG7haw0jeeX5KrsCaqA/Kanban-Board-Setup.
+  This is a code bundle for Kanban Board Setup. The original project is available at https://tile-track-66547713.figma.site
 
   ## Running the code
 
